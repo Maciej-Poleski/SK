@@ -1,0 +1,1 @@
+/home/evil/Studia/Przedmioty/Sieci komputerowe/servwww/build/CMakeFiles/serv.dir

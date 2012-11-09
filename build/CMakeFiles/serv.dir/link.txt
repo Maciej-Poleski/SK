@@ -1,0 +1,1 @@
+/usr/bin/c++   -g    CMakeFiles/serv.dir/main.cxx.o  -o serv -rdynamic -lboost_date_time-mt -lboost_system-mt -lboost_filesystem-mt 
