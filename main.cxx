@@ -173,11 +173,14 @@ public:
                 boost::asio::write(socket_, boost::asio::buffer(final_reply));
             }
         }
-        catch(const std::exception& e)
+        catch(const std::exception& ignored)
         {
-            std::string reply = http_version + " 500 Internal Server Error\r\n\r\n" + e.what() + "\r\n";
-            boost::system::error_code ignored;
-            boost::asio::write(socket_, boost::asio::buffer(reply), ignored);
+            // Let this thread end
+
+            // Some kind of web browser will open new connection in response to
+            // closing this connection (bacause we have HTTP/1.0, but client may
+            // expect HTTP/1.1). The request in new connection will be malformed
+            // and cause this exception.
         }
     }
 
@@ -211,23 +214,10 @@ private:
             acceptor_.accept(new_connection->socket());
             std::thread thread(&tcp_connection::start, new_connection);
             thread.detach();
+
+            // In fact this technique is obsolete and it is possible to do it
+            // better. But this is easier and satisfies our requirements.
         }
-
-//         acceptor_.async_accept(new_connection->socket(),
-//                                boost::bind(&tcp_server::handle_accept, this, new_connection,
-//                                            boost::asio::placeholders::error));
-    }
-
-    void handle_accept(tcp_connection::pointer new_connection,
-                       const boost::system::error_code& error)
-    {
-        if(!error)
-        {
-            std::thread thread(&tcp_connection::start, new_connection);
-            thread.detach();
-        }
-
-        start_accept();
     }
 
     tcp::acceptor acceptor_;
@@ -239,11 +229,10 @@ int main()
     {
         boost::asio::io_service io_service;
         tcp_server server(io_service, 8080);
-        io_service.run();
     }
-    catch(std::exception& e)
+    catch(const std::exception& e)
     {
-        std::cerr << e.what() << std::endl;
+        std::cerr << "Serwer padł: " << e.what() << std::endl;
     }
 
     return 0;
